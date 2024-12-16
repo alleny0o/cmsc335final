@@ -7,6 +7,9 @@ require("dotenv").config({ path: path.resolve(__dirname, ".env") });
 
 const app = express();
 
+// Remove the static middleware
+// app.use("/static", express.static("css"));
+
 // Middleware to parse form data
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -22,7 +25,7 @@ const pass = process.env.MONGO_DB_PASSWORD;
 const dbname = process.env.MONGO_DB_NAME;
 const coll = process.env.MONGO_COLLECTION;
 
-const uri = `mongodb+srv://${user}:${pass}@cluster0.jr7bm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = `mongodb+srv://${user}:${pass}@cluster0.jr7bm.mongodb.net/${dbname}?retryWrites=true&w=majority&appName=Cluster0`;
 const databaseAndCollection = {
     db: dbname,
     collection: coll,
@@ -44,12 +47,14 @@ app.post("/findLevel", async (req, res) => {
 
     try {
         const levels = await searchLevel(levelName);
+        console.log("Fetched Levels:", levels); // Logging
 
         if (!levels || levels.length === 0) {
             return res.status(404).send("Level not found.");
         }
 
         const { _id, name, info } = levels[0];
+        console.log(`Rendering questionPage for level: ${name}`, { _id, info });
         res.render("questionPage", { _id, name, info });
     } catch (err) {
         console.error("Error finding level:", err);
