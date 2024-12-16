@@ -1,159 +1,102 @@
 const path = require("path");
-const fs = require("fs");
 const express = require("express");
-const app = express(); 
-app.use('/static', express.static('css'));
-
 const bodyParser = require("body-parser");
+const { MongoClient, ServerApiVersion } = require("mongodb");
 
-require("dotenv").config({ path: path.resolve(__dirname, '.env') }) 
+require("dotenv").config({ path: path.resolve(__dirname, ".env") });
 
-let user = process.env.MONGO_DB_USERNAME;
-let pass = process.env.MONGO_DB_PASSWORD;
-let dbname = process.env.MONGO_DB_NAME;
-let coll = process.env.MONGO_COLLECTION;
+const app = express();
 
-let uri = `mongodb+srv://${user}:${pass}@cluster0.jr7bm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
-// console.log(uri);
+// Middleware to serve static files
+app.use("/static", express.static("css"));
+
+// Middleware to parse form data
+app.use(bodyParser.urlencoded({ extended: false }));
+
+// Middleware to dynamically set baseUrl for templates
+app.use((req, res, next) => {
+    res.locals.baseUrl = `${req.protocol}://${req.get("host")}`;
+    next();
+});
+
+// MongoDB Configuration
+const user = process.env.MONGO_DB_USERNAME;
+const pass = process.env.MONGO_DB_PASSWORD;
+const dbname = process.env.MONGO_DB_NAME;
+const coll = process.env.MONGO_COLLECTION;
+
+const uri = `mongodb+srv://${user}:${pass}@cluster0.jr7bm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 const databaseAndCollection = {
     db: dbname,
     collection: coll,
 };
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
-
-if (process.argv.length != 3) {
-    process.stdout.write(`Usage ${process.argv[1]} PortNumber`);
-    process.exit(1);
-  }
-const portNumber = process.argv[2];
-
-console.log(`web server started running at: http://localhost:${portNumber}`);
-process.stdin.setEncoding("utf8");
-
+// View Engine
 app.set("views", path.resolve(__dirname, "templates"));
 app.set("view engine", "ejs");
-app.use(bodyParser.urlencoded({extended:false}))
 
-app.get("/", (request, response) => {
-    const variables = {
-        port: portNumber
-    }
-    response.render("index",variables);
-});
+// Routes
+app.get("/", (req, res) => res.render("index"));
 
-app.get("/searchLevel", (request, response) => {
-    const variables = {
-        port: portNumber
-    }
-    response.render("searchLevel",variables);
-});
+app.get("/searchLevel", (req, res) => res.render("searchLevel"));
 
-app.get("/characterLookup", (request, response) => {
-    const variables = {
-        port: portNumber
-    }
-    response.render("lookupPage",variables);
-});
-app.post("/findLevel", async (request, response) => {
-    let { levelName } = request.body;
+app.get("/characterLookup", (req, res) => res.render("lookupPage"));
+
+app.post("/findLevel", async (req, res) => {
+    const { levelName } = req.body;
 
     try {
-        let levels = await searchLevel(levelName);
+        const levels = await searchLevel(levelName);
 
         if (!levels || levels.length === 0) {
-            return response.status(404).send("Level not found.");
+            return res.status(404).send("Level not found.");
         }
 
-        let { _id, name, info } = levels[0];
-
-        response.render("questionPage", {_id, name, info });
-    } catch (error) {
-        console.error("Error finding level:", error);
-        response.status(500).send("An error occurred.");
+        const { _id, name, info } = levels[0];
+        res.render("questionPage", { _id, name, info });
+    } catch (err) {
+        console.error("Error finding level:", err);
+        res.status(500).send("An error occurred.");
     }
 });
 
+app.get("/addLevel", (req, res) => res.render("addLevelPage"));
 
-app.get("/addLevel", (request, response) => {
-    const variables = {
-        port: portNumber
-    }
-    response.render("addLevelPage",variables);
-});
+app.post("/processLevel", async (req, res) => {
+    const { name, info } = req.body;
 
-
-app.post("/processLevel", async (request, response) => {
-    let {name, info } = request.body;
-    let level = {name, info };
-    try{
-        await insertLevel(level);
-        response.render("addLevelPageComplete",{name, info });
-    }   catch (err) {
-        console.error(err);
-        response.status(500).send("Error saving level information.");
-   }
-});
-app.listen(portNumber);
-
-const prompt = "Type stop to shutdown the server: ";
-
-
-process.stdout.write(prompt);
-process.stdin.on("readable", function () {
-    const dataInput = process.stdin.read();
-    if (dataInput !== null) {
-        const command = dataInput.trim();
-        if (command === "stop") {
-            process.stdout.write(`shutting down the server`);
-            process.exit(0);
-        } else {
-            process.stdout.write(`invalid command: ${command}\n`);
-        }
-        process.stdout.write(prompt);
-        process.stdin.resume();
+    try {
+        await insertLevel({ name, info });
+        res.render("addLevelPageComplete", { name, info });
+    } catch (err) {
+        console.error("Error saving level information:", err);
+        res.status(500).send("Error saving level information.");
     }
 });
 
+// Server Setup
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
+
+// MongoDB Functions
 async function insertLevel(newLevel) {
-    const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 })
+    const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
     try {
         await client.connect();
-        const result = await client.db(databaseAndCollection.db).collection(databaseAndCollection.collection).insertOne(newLevel);
-    } catch (e) {
-        console.error(e);
+        await client.db(databaseAndCollection.db).collection(databaseAndCollection.collection).insertOne(newLevel);
     } finally {
         await client.close();
     }
 }
 
 async function searchLevel(levelName) {
-    const client = new MongoClient(uri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        serverApi: ServerApiVersion.v1,
-    });
-
+    const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
     try {
-
         await client.connect();
-
-        const result = await client
-            .db(databaseAndCollection.db)
-            .collection(databaseAndCollection.collection)
-            .find({ name: levelName }) 
-            .toArray();
-
-        if (result.length === 0) {
-            console.log(`No level found with the name "${levelName}"`);
-            return null;
-        }
-        //console.log("Search results:", result);
-
+        const result = await client.db(databaseAndCollection.db).collection(databaseAndCollection.collection).find({ name: levelName }).toArray();
         return result;
-    } catch (e) {
-        console.error("Error occurred while searching for level:", e);
-        throw e;
     } finally {
         await client.close();
     }
