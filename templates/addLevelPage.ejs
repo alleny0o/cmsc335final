@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Level</title>
+</head>
+<body>
+    <h1>Add Level</h1>
+	<form action="http://localhost:<%= port %>/processLevel" method="post"> 
+		<fieldset>
+            <p>name your level and paste in the set of character you would like to be in your level</p>
+
+			<label>Level Code: <input type="text" name="name" /></label>
+	
+			<legend>Characters</legend>
+			<label><textarea rows="5" cols="80" name="info"></textarea></label>
+		</fieldset>
+
+		<br>
+		<input type="reset" />
+		<input type="submit" value="Submit Level" />
+
+		<a href="/">HOME</a>
+	</form>
+	<br>
+</body>
+</html>

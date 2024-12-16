@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css">
+    <title>Questions</title>
+</head>
+<body>
+    <div id="content">
+        <h1>Level: <%= name %></h1>
+        <p id="remainingCount">Remaining: <%= info.split(" ").length %> characters</p>
+
+        <form>
+            <fieldset>
+                <legend>
+                    <strong>Question</strong>
+                </legend>
+                <input type="text" id="definition" value="Loading..." readonly><br><br>
+                <div id="pinyinWrapper">
+                    <input type="text" id="pinyin" value="Loading..." readonly><br><br>
+                    <span id="toneMark"></span>
+                </div>
+                <input type="button" id="choice1" value=""><br>
+                <input type="button" id="choice2" value=""><br>
+                <input type="button" id="choice3" value=""><br>
+                <input type="button" id="choice4" value=""><br>
+                <button id="next" hidden>Next</button>
+            </fieldset>
+        </form>
+
+        <a href="/">HOME</a>
+    </div>
+
+    <script>
+        let levelInfo = <%- JSON.stringify(info.split(" ")) %>;
+        let currentQuestion = "";
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        async function getCharacterInfo(character) {
+            const response = await fetch(`http://ccdb.hemiola.com/characters/string/${character}?fields=kDefinition,kMandarin`);
+            const data = await response.json();
+            return data[0];
+        }
+
+        function adjustPinyin(pinyin) {
+            const tones = ["", "̄", "́", "̌", "̀"];
+            let result = "";
+            let toneMark = "";
+            const pinyinParts = pinyin.split(" ");
+
+            pinyinParts.forEach((word) => {
+                let pinyinChar = word.slice(0, -1);
+                let tone = word.slice(-1);
+
+                if (tone >= 1 && tone <= 4) {
+                    toneMark = tones[tone];
+                }
+
+                result += pinyinChar + toneMark + " ";
+            });
+
+            return result.trim();
+        }
+
+        async function nextQuestion() {
+            if (levelInfo.length === 0) {
+                alert("Game Over! No more questions.");
+                return;
+            }
+
+            const questionIndex = Math.floor(Math.random() * levelInfo.length);
+            const questionChar = levelInfo.splice(questionIndex, 1)[0];
+            const characterInfo = await getCharacterInfo(questionChar);
+
+            const englishDefinition = characterInfo.kDefinition || "No definition available";
+            const pinyin = characterInfo.kMandarin || "No Pinyin available";
+
+            document.getElementById("definition").value = englishDefinition;
+            const adjustedPinyin = adjustPinyin(pinyin);
+            document.getElementById("pinyin").value = adjustedPinyin;
+            document.getElementById("toneMark").textContent = adjustedPinyin ? adjustedPinyin.slice(-1) : '';
+
+            const choices = [questionChar];
+            while (choices.length < 4) {
+                const randomChoice = levelInfo[Math.floor(Math.random() * levelInfo.length)];
+                if (!choices.includes(randomChoice)) {
+                    choices.push(randomChoice);
+                }
+            }
+
+            shuffleArray(choices);
+
+            document.getElementById("choice1").value = choices[0];
+            document.getElementById("choice2").value = choices[1];
+            document.getElementById("choice3").value = choices[2];
+            document.getElementById("choice4").value = choices[3];
+
+            document.getElementById("remainingCount").textContent = `Remaining: ${levelInfo.length} characters`;
+
+            currentQuestion = questionChar;
+        }
+
+        const buttons = document.querySelectorAll('input[type="button"]');
+        const nextButton = document.getElementById("next");
+
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                const selected = button.value;
+
+                if (selected === currentQuestion) {
+                    nextButton.hidden = false;
+                } else {
+                    button.classList.add('hidden');
+                    const correctButton = Array.from(buttons).find(b => b.value === currentQuestion);
+                    if (correctButton) {
+                        correctButton.classList.add('correct');
+                    }
+                }
+
+                button.disabled = true;
+                nextButton.disabled = false;
+            });
+        });
+
+        nextButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            nextQuestion();
+            nextButton.hidden = true;
+            buttons.forEach(btn => {
+                btn.classList.remove("hidden");
+                btn.disabled = false;
+            });
+        });
+
+        nextQuestion();
+    </script>
+</body>
+</html>

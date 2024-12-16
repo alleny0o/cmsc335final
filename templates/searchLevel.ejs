@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<title>Level Search</title>
+</head>
+
+<body>
+	<h1>Find and start Playing level</h1>
+	<form action="http://localhost:<%= port %>/findLevel" method="post">
+		<fieldset>
+			<label>Level Code: <input type="text" name="levelName"></label>
+		</fieldset>
+
+		<br>
+		<input type="reset" />
+		<input type="submit" value="Submit Request"/>
+	</form>
+
+    <br><hr><a href="/">HOME</a>
+</body>
+
+</html>

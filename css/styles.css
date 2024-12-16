@@ -1,0 +1,123 @@
+body, h1, p, input, button, fieldset, legend {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    line-height: 1.6;
+    margin: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#content {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 600px;
+    padding: 20px;
+    text-align: center;
+}
+
+h1 {
+    font-size: 1.8rem;
+    color: #444;
+    margin-bottom: 10px;
+}
+
+p {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+form fieldset {
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+form legend {
+    font-size: 1.2rem;
+    color: #555;
+    font-weight: bold;
+}
+
+input[type="text"] {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f4f4f4;
+    color: #333;
+    font-size: 1rem;
+    text-align: center;
+}
+
+input[type="button"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #fff;
+    background-color: #007BFF;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+input[type="button"]:hover {
+    background-color: #0056b3;
+}
+
+button#next {
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #fff;
+    background-color: #28a745;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button#next:hover {
+    background-color: #218838;
+}
+
+.hidden {
+    display: none;
+}
+
+.pinyin-container {
+    position: relative;
+    text-align: center;
+}
+
+#toneMark {
+    position: absolute;
+    top: -20px;
+    width: 100%;
+    font-size: 50px;
+    text-align: center;
+}
+
+#pinyin {
+    display: inline-block;
+    text-align: center;
+    width: 100%;
+    font-size: 20px;
+    padding-top: 10px;
+}

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lookup</title>
+</head>
+<body>
+    <input id ="entry" type="text" value="年"> </input>
+    <button id = "submit">submit</button>
+    <div id="display"></div>
+    <script>
+
+        document.getElementById("submit").addEventListener('click', async () => {
+            let query = document.getElementById("entry").value;
+            let data = await getCharacterInfo(query);
+            console.log(data);
+            document.getElementById("display").innerHTML = `pinyin: ${data[0].kMandarin} <br> definition: ${data[0].kDefinition}`;
+
+        });
+
+        async function getCharacterInfo(character){
+            console.log(character);
+            const response = await fetch(`http://ccdb.hemiola.com/characters/string/${character}?fields=kDefinition,kMandarin`);
+            const data = await response.json();
+            return data;
+        }
+         
+    </script>
+</body>
+</html>
