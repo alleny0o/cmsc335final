@@ -7,9 +7,6 @@ require("dotenv").config({ path: path.resolve(__dirname, ".env") });
 
 const app = express();
 
-// Middleware to serve static files
-app.use("/static", express.static("css"));
-
 // Middleware to parse form data
 app.use(bodyParser.urlencoded({ extended: false }));
 
